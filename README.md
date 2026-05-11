@@ -50,7 +50,7 @@ No frameworks, no libraries, no installs. Just open and play.
 
 ```bash
 # Clone the repo
-git clone https://github.com/your-username/burger-stack-game.git
+git clone https://github.com/fizaakhtar805-code/burger-stack-game.git
 
 # Open the game
 cd burger-stack-game

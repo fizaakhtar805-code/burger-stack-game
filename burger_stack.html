@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Burger Stack — Learn DSA</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: #FFF8EE;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── BG PATTERN ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background-image: radial-gradient(circle, #f0d090 1px, transparent 1px);
+  background-size: 32px 32px;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+#app {
+  position: relative; z-index: 1;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px 16px 40px;
+}
+
+/* ── HEADER ── */
+#header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+#header h1 {
+  font-family: 'Fredoka One', cursive;
+  font-size: clamp(32px, 6vw, 52px);
+  color: #c0440a;
+  text-shadow: 3px 3px 0 #f0c070, 5px 5px 0 rgba(0,0,0,0.1);
+  letter-spacing: 1px;
+}
+#header p {
+  font-size: 15px;
+  color: #9a7050;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+/* ── SCORE BAR ── */
+#scorebar {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.score-pill {
+  background: white;
+  border: 2px solid #f0d0a0;
+  border-radius: 99px;
+  padding: 8px 20px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #704020;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* ── MAIN LAYOUT ── */
+#main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ── PANELS ── */
+.panel {
+  background: white;
+  border-radius: 20px;
+  border: 2px solid #f0d0a0;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+}
+.panel-title {
+  font-family: 'Fredoka One', cursive;
+  font-size: 18px;
+  color: #c0440a;
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* ── INGREDIENTS GRID ── */
+#ingredients-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.ingredient-btn {
+  background: #FFF8EE;
+  border: 2px solid #f0d0a0;
+  border-radius: 14px;
+  padding: 12px 6px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  font-family: 'Nunito', sans-serif;
+}
+.ingredient-btn:hover {
+  transform: translateY(-4px) scale(1.05);
+  border-color: #e08030;
+  box-shadow: 0 6px 16px rgba(200,80,0,0.2);
+  background: #fff3e0;
+}
+.ingredient-btn:active { transform: scale(0.96); }
+.ingredient-btn .ing-emoji { font-size: 32px; display: block; line-height: 1; }
+.ingredient-btn .ing-name  { font-size: 11px; font-weight: 700; color: #9a6030; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.ingredient-btn .ing-op    { font-size: 10px; color: #c07040; margin-top: 2px; font-weight: 600; }
+
+/* ── BURGER BUILDER ── */
+#burger-wrap {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 10px;
+  background: #fffaf4;
+  border-radius: 14px;
+  border: 2px dashed #f0d0a0;
+  position: relative;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+#empty-label {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  text-align: center;
+  color: #d0b080;
+  pointer-events: none;
+}
+#empty-label .empty-emoji { font-size: 40px; }
+#empty-label p { font-size: 13px; font-weight: 700; margin-top: 6px; letter-spacing: 0.5px; }
+
+#burger-stack {
+  display: flex;
+  flex-direction: column-reverse; /* bottom of stack = first child */
+  align-items: center;
+  width: 100%;
+  gap: 2px;
+}
+
+.burger-layer {
+  animation: drop-in 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(160px, 90%, 220px);
+  height: 52px;
+  border-radius: 14px;
+  font-size: 28px;
+  position: relative;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.1), inset 0 -2px 0 rgba(0,0,0,0.08);
+  transition: all 0.3s;
+}
+.burger-layer.top-layer {
+  outline: 3px solid #e08030;
+  outline-offset: 2px;
+}
+.burger-layer .layer-label {
+  position: absolute;
+  right: -88px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #9a6030;
+  white-space: nowrap;
+  background: #fff8ee;
+  border: 1px solid #f0d0a0;
+  border-radius: 99px;
+  padding: 2px 8px;
+}
+.burger-layer .top-badge {
+  position: absolute;
+  left: -72px;
+  font-size: 10px;
+  font-weight: 800;
+  color: white;
+  background: #e08030;
+  border-radius: 99px;
+  padding: 2px 8px;
+  letter-spacing: 0.5px;
+}
+
+@keyframes drop-in {
+  from { transform: translateY(-60px) scale(0.8); opacity: 0; }
+  to   { transform: translateY(0)     scale(1);   opacity: 1; }
+}
+@keyframes pop-out {
+  from { transform: scale(1);   opacity: 1; }
+  to   { transform: scale(0.5) translateY(-40px); opacity: 0; }
+}
+.popping { animation: pop-out 0.3s ease forwards; }
+
+/* ── ACTIONS ── */
+#actions {
+  display: flex; gap: 10px;
+}
+.act-btn {
+  flex: 1;
+  font-family: 'Fredoka One', cursive;
+  font-size: 16px;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.5px;
+}
+.act-btn:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
+.act-btn:active:not(:disabled){ transform: scale(0.96); }
+.act-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+#btn-pop   { background: #ff6b35; color: white; }
+#btn-clear { background: #f0d0a0; color: #704020; }
+
+/* ── RIGHT PANEL: STACK VISUALIZER ── */
+#stack-panel .panel-title { color: #2060c0; }
+#stack-panel { border-color: #c0d8f8; }
+
+#stack-explain {
+  background: #f0f6ff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #3060a0;
+  font-weight: 600;
+  margin-bottom: 14px;
+  line-height: 1.5;
+  border: 1px solid #c0d8f8;
+}
+
+#stack-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 200px;
+}
+
+.stack-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 2px solid #c0d8f8;
+  background: #f8fbff;
+  animation: slide-right 0.3s ease;
+  transition: all 0.3s;
+}
+@keyframes slide-right {
+  from { transform: translateX(20px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+.stack-item.is-top {
+  background: #e0f0ff;
+  border-color: #4090e0;
+  box-shadow: 0 2px 10px rgba(64,144,224,0.2);
+}
+.stack-item .si-emoji { font-size: 22px; }
+.stack-item .si-info  { flex: 1; }
+.stack-item .si-name  { font-size: 13px; font-weight: 800; color: #2050a0; }
+.stack-item .si-index { font-size: 11px; color: #7090c0; font-weight: 600; }
+.stack-badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: #4090e0;
+  color: white;
+}
+.stack-item.removing { animation: fade-out 0.3s ease forwards; }
+@keyframes fade-out {
+  to { transform: translateX(-20px); opacity: 0; height: 0; padding: 0; margin: 0; }
+}
+
+#stack-empty {
+  text-align: center;
+  color: #a0c0e0;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 30px;
+}
+
+/* ── OPERATION LOG ── */
+#op-log {
+  margin-top: 14px;
+  background: #f8fbff;
+  border-radius: 10px;
+  border: 1px solid #c0d8f8;
+  padding: 10px 12px;
+  max-height: 130px;
+  overflow-y: auto;
+}
+#op-log-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #7090c0;
+  margin-bottom: 6px;
+}
+.op-entry {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 0;
+  border-bottom: 1px solid #e8f0f8;
+  color: #4070b0;
+}
+.op-entry.push { color: #20a050; }
+.op-entry.pop  { color: #e05020; }
+
+/* ── ORDER CARD ── */
+#order-card {
+  background: white;
+  border: 2px solid #f0d0a0;
+  border-radius: 20px;
+  padding: 16px 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+#order-label {
+  font-family: 'Fredoka One', cursive;
+  font-size: 16px;
+  color: #c0440a;
+  white-space: nowrap;
+}
+#order-items {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+.order-item {
+  font-size: 22px;
+  background: #fff3e0;
+  border: 2px solid #f0d0a0;
+  border-radius: 10px;
+  padding: 4px 8px;
+  transition: all 0.2s;
+}
+.order-item.matched {
+  background: #e8f8e8;
+  border-color: #60c070;
+  position: relative;
+}
+.order-item.matched::after {
+  content: '✓';
+  position: absolute;
+  top: -6px; right: -6px;
+  font-size: 10px;
+  background: #40b050;
+  color: white;
+  border-radius: 99px;
+  width: 16px; height: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: sans-serif;
+}
+#order-btn {
+  font-family: 'Fredoka One', cursive;
+  font-size: 14px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: none;
+  background: #f0a030;
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+#order-btn:hover { background: #e09020; transform: translateY(-2px); }
+
+/* ── WIN TOAST ── */
+#toast {
+  position: fixed;
+  top: 20px; left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  background: white;
+  border: 2px solid #60c070;
+  border-radius: 16px;
+  padding: 14px 28px;
+  font-family: 'Fredoka One', cursive;
+  font-size: 20px;
+  color: #208040;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+  z-index: 999;
+  transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+  text-align: center;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 640px) {
+  #main { grid-template-columns: 1fr; }
+  .burger-layer .layer-label { display: none; }
+  .burger-layer .top-badge   { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- HEADER -->
+  <div id="header">
+    <h1>🍔 Burger Stack</h1>
+    <p>Learn the Stack data structure by making burgers!</p>
+  </div>
+
+  <!-- SCORE -->
+  <div id="scorebar">
+    <div class="score-pill">🏆 Score: <span id="sc-score">0</span></div>
+    <div class="score-pill">🍔 Burgers Made: <span id="sc-burgers">0</span></div>
+    <div class="score-pill">📦 Stack Size: <span id="sc-size">0</span></div>
+  </div>
+
+  <!-- ORDER CARD -->
+  <div id="order-card">
+    <div id="order-label">📋 Today's Order:</div>
+    <div id="order-items"></div>
+    <button id="order-btn" onclick="checkOrder()">✅ Serve It!</button>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div id="main">
+
+    <!-- LEFT: BURGER BUILDER -->
+    <div class="panel">
+      <div class="panel-title">👨‍🍳 Build Your Burger</div>
+
+      <!-- Burger display -->
+      <div id="burger-wrap">
+        <div id="empty-label">
+          <div class="empty-emoji">🍽️</div>
+          <p>Click ingredients<br>below to stack!</p>
+        </div>
+        <div id="burger-stack"></div>
+      </div>
+
+      <!-- Actions -->
+      <div id="actions" style="margin-bottom:14px">
+        <button class="act-btn" id="btn-pop"   onclick="popIngredient()">🗑 Remove Top (POP)</button>
+        <button class="act-btn" id="btn-clear" onclick="clearBurger()">🔄 Start Over</button>
+      </div>
+
+      <!-- Ingredients -->
+      <div class="panel-title" style="margin-top:4px">🧀 Ingredients — Click to ADD (PUSH)</div>
+      <div id="ingredients-grid"></div>
+    </div>
+
+    <!-- RIGHT: STACK VISUALIZER -->
+    <div class="panel" id="stack-panel">
+      <div class="panel-title">📦 Stack Visualizer</div>
+
+      <div id="stack-explain">
+        <b>What is a Stack?</b><br>
+        Think of it like a pile of plates 🍽️<br>
+        • <b>PUSH</b> = add a plate on TOP<br>
+        • <b>POP</b> = remove from the TOP only<br>
+        • <b>LIFO</b> = Last In, First Out!
+      </div>
+
+      <div id="stack-visual">
+        <div id="stack-empty">Stack is empty!<br>Add ingredients 👆</div>
+      </div>
+
+      <div id="op-log">
+        <div id="op-log-title">🔁 Operation Log</div>
+        <div id="op-entries"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast">🎉 Order complete! +50 pts</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  INGREDIENTS
+// ══════════════════════════════════════════════
+const INGREDIENTS = [
+  { id:'bun-top',   emoji:'🟠', name:'Top Bun',     color:'#f5c842', border:'#d4a020' },
+  { id:'lettuce',   emoji:'🥬', name:'Lettuce',     color:'#90e070', border:'#50b030' },
+  { id:'tomato',    emoji:'🍅', name:'Tomato',      color:'#ff7060', border:'#d04030' },
+  { id:'cheese',    emoji:'🟡', name:'Cheese',      color:'#ffd040', border:'#d0a020' },
+  { id:'patty',     emoji:'🟤', name:'Beef Patty',  color:'#c07040', border:'#905020' },
+  { id:'onion',     emoji:'🧅', name:'Onion',       color:'#e0b0e0', border:'#b070b0' },
+  { id:'pickle',    emoji:'🥒', name:'Pickle',      color:'#70d060', border:'#409030' },
+  { id:'bacon',     emoji:'🥓', name:'Bacon',       color:'#e06050', border:'#b03020' },
+  { id:'bun-bot',   emoji:'⬛', name:'Bottom Bun',  color:'#f5c842', border:'#d4a020' },
+];
+
+// Real emojis for display
+const ING_DISPLAY = {
+  'bun-top': '🍞', 'lettuce': '🥬', 'tomato': '🍅',
+  'cheese': '🧀',  'patty': '🥩',   'onion': '🧅',
+  'pickle': '🥒',  'bacon': '🥓',   'bun-bot': '🍞'
+};
+
+// ── STATE ──
+let stack = [];    // our Stack data structure
+let score = 0;
+let burgersMade = 0;
+let currentOrder = [];
+
+// ══════════════════════════════════════════════
+//  BUILD INGREDIENT BUTTONS
+// ══════════════════════════════════════════════
+function buildIngredients() {
+  const grid = document.getElementById('ingredients-grid');
+  grid.innerHTML = '';
+  INGREDIENTS.forEach(ing => {
+    const btn = document.createElement('button');
+    btn.className = 'ingredient-btn';
+    btn.innerHTML = `
+      <span class="ing-emoji">${ING_DISPLAY[ing.id]}</span>
+      <div class="ing-name">${ing.name}</div>
+      <div class="ing-op">PUSH ↑</div>
+    `;
+    btn.onclick = () => pushIngredient(ing);
+    grid.appendChild(btn);
+  });
+}
+
+// ══════════════════════════════════════════════
+//  PUSH — add to top of stack
+// ══════════════════════════════════════════════
+function pushIngredient(ing) {
+  if (stack.length >= 8) {
+    showToast('⚠️ Stack is full! POP something first.', '#e07030');
+    return;
+  }
+
+  stack.push(ing);   // JS push = Stack PUSH
+
+  addLog(`PUSH → ${ING_DISPLAY[ing.id]} ${ing.name}`, 'push');
+  renderBurger();
+  renderStackVis();
+  updateScoreBar();
+  updateOrderMatches();
+}
+
+// ══════════════════════════════════════════════
+//  POP — remove from top of stack
+// ══════════════════════════════════════════════
+function popIngredient() {
+  if (stack.length === 0) return;
+
+  const removed = stack.pop();   // JS pop = Stack POP
+
+  addLog(`POP ← ${ING_DISPLAY[removed.id]} ${removed.name}`, 'pop');
+
+  // Animate removal
+  const layers = document.querySelectorAll('.burger-layer');
+  if (layers.length > 0) {
+    const top = layers[layers.length - 1];
+    top.classList.add('popping');
+    setTimeout(() => {
+      renderBurger();
+      renderStackVis();
+      updateScoreBar();
+      updateOrderMatches();
+    }, 280);
+  }
+}
+
+// ══════════════════════════════════════════════
+//  CLEAR
+// ══════════════════════════════════════════════
+function clearBurger() {
+  stack = [];
+  addLog('--- Stack cleared ---', '');
+  renderBurger();
+  renderStackVis();
+  updateScoreBar();
+  updateOrderMatches();
+}
+
+// ══════════════════════════════════════════════
+//  RENDER BURGER
+// ══════════════════════════════════════════════
+function renderBurger() {
+  const wrap  = document.getElementById('burger-stack');
+  const empty = document.getElementById('empty-label');
+  wrap.innerHTML = '';
+
+  if (stack.length === 0) {
+    empty.style.display = 'block';
+    document.getElementById('btn-pop').disabled = true;
+    return;
+  }
+
+  empty.style.display = 'none';
+  document.getElementById('btn-pop').disabled = false;
+
+  stack.forEach((ing, i) => {
+    const isTop = i === stack.length - 1;
+    const layer = document.createElement('div');
+    layer.className = 'burger-layer' + (isTop ? ' top-layer' : '');
+    layer.style.background = ing.color;
+    layer.style.border = `2px solid ${ing.border}`;
+    layer.innerHTML = `
+      <span>${ING_DISPLAY[ing.id]}</span>
+      ${isTop ? `<span class="top-badge">TOP</span>` : ''}
+      <span class="layer-label">index [${i}]</span>
+    `;
+    wrap.appendChild(layer);
+  });
+}
+
+// ══════════════════════════════════════════════
+//  RENDER STACK VISUALIZER
+// ══════════════════════════════════════════════
+function renderStackVis() {
+  const vis = document.getElementById('stack-visual');
+  const emptyEl = document.getElementById('stack-empty');
+
+  vis.innerHTML = '';
+
+  if (stack.length === 0) {
+    vis.innerHTML = '<div id="stack-empty" style="text-align:center;color:#a0c0e0;font-size:14px;font-weight:700;padding:30px">Stack is empty!<br>Add ingredients 👆</div>';
+    return;
+  }
+
+  // Show from top to bottom
+  [...stack].reverse().forEach((ing, i) => {
+    const isTop = i === 0;
+    const actualIndex = stack.length - 1 - i;
+
+    const el = document.createElement('div');
+    el.className = 'stack-item' + (isTop ? ' is-top' : '');
+    el.innerHTML = `
+      <span class="si-emoji">${ING_DISPLAY[ing.id]}</span>
+      <div class="si-info">
+        <div class="si-name">${ing.name}</div>
+        <div class="si-index">stack[${actualIndex}]</div>
+      </div>
+      ${isTop ? '<span class="stack-badge">TOP ← here</span>' : ''}
+    `;
+    vis.appendChild(el);
+  });
+}
+
+// ══════════════════════════════════════════════
+//  GENERATE ORDER
+// ══════════════════════════════════════════════
+function generateOrder() {
+  const options = ['bun-bot','patty','cheese','lettuce','tomato','bacon','pickle','bun-top'];
+  const count = 3 + Math.floor(Math.random() * 3); // 3-5 items
+  currentOrder = [];
+  // Always start with bottom bun, end with top bun
+  currentOrder.push('bun-bot');
+  const middle = options.slice(1, -1);
+  for (let i = 0; i < count - 2; i++) {
+    const pick = middle[Math.floor(Math.random() * middle.length)];
+    if (!currentOrder.includes(pick)) currentOrder.push(pick);
+  }
+  currentOrder.push('bun-top');
+  renderOrder();
+}
+
+function renderOrder() {
+  const el = document.getElementById('order-items');
+  el.innerHTML = '';
+  currentOrder.forEach(id => {
+    const ing = INGREDIENTS.find(i => i.id === id);
+    const div = document.createElement('div');
+    div.className = 'order-item';
+    div.id = 'order-' + id;
+    div.textContent = ING_DISPLAY[id];
+    div.title = ing.name;
+    el.appendChild(div);
+  });
+}
+
+function updateOrderMatches() {
+  currentOrder.forEach((id, i) => {
+    const el = document.getElementById('order-' + id);
+    if (!el) return;
+    el.className = 'order-item' + (stack[i] && stack[i].id === id ? ' matched' : '');
+  });
+}
+
+// ══════════════════════════════════════════════
+//  CHECK ORDER
+// ══════════════════════════════════════════════
+function checkOrder() {
+  if (stack.length !== currentOrder.length) {
+    showToast(`❌ Need ${currentOrder.length} layers, you have ${stack.length}!`, '#e05030');
+    return;
+  }
+  const correct = currentOrder.every((id, i) => stack[i] && stack[i].id === id);
+  if (correct) {
+    score += 50 + stack.length * 5;
+    burgersMade++;
+    updateScoreBar();
+    showToast(`🎉 Perfect burger! +${50 + stack.length * 5} pts`, '#30a050');
+    addLog(`✅ Burger served! +${50 + stack.length * 5} pts`, 'push');
+    setTimeout(() => {
+      clearBurger();
+      generateOrder();
+    }, 1200);
+  } else {
+    showToast('❌ Wrong order! Check the recipe!', '#e05030');
+    addLog('❌ Order mismatch — keep trying!', 'pop');
+  }
+}
+
+// ══════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════
+function updateScoreBar() {
+  document.getElementById('sc-score').textContent   = score;
+  document.getElementById('sc-burgers').textContent = burgersMade;
+  document.getElementById('sc-size').textContent    = stack.length;
+}
+
+function addLog(msg, cls) {
+  const log = document.getElementById('op-entries');
+  const el  = document.createElement('div');
+  el.className = 'op-entry ' + cls;
+  el.textContent = msg;
+  log.insertBefore(el, log.firstChild);
+  while (log.children.length > 15) log.removeChild(log.lastChild);
+}
+
+let toastTimer;
+function showToast(msg, color='#208040') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = color;
+  t.style.color = color;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── START ──
+buildIngredients();
+generateOrder();
+renderBurger();
+renderStackVis();
+updateScoreBar();
+</script>
+</body>
+</html>

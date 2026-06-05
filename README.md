@@ -61,16 +61,6 @@ Or just download the ZIP and open `index.html` directly.
 
 ---
 
-## 📁 Project Structure
-
-```
-burger-stack-game/
-├── index.html       # Main game file
-├── style.css        # Game styles
-├── game.js          # Game logic
-└── README.md        # You're reading this!
-```
-
 *(Structure may vary depending on your setup)*
 
 ---
@@ -79,8 +69,4 @@ burger-stack-game/
 
 Made with ❤️ and hunger. Built as a fun front-end mini project.
 
----
 
-## 📄 License
-
-This project is open source and free to use.

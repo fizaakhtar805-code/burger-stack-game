@@ -34,7 +34,7 @@ Burger Stack is a casual stacking game where you drop burger ingredients one by 
 
 > 💡 Tip: The more centered your drops, the longer your stack survives!
 
----
+
 
 ## 🛠️ Tech Stack
 
@@ -48,14 +48,6 @@ No frameworks, no libraries, no installs. Just open and play.
 
 ## 🚀 Getting Started
 
-```bash
-# Clone the repo
-git clone https://github.com/fizaakhtar805-code/burger-stack-game.git
-
-# Open the game
-cd burger-stack-game
-open index.html
-```
 
 Or just download the ZIP and open `index.html` directly.
 
